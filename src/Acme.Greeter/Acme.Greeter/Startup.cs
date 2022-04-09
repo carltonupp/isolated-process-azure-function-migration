@@ -23,7 +23,7 @@ public class Startup : FunctionsStartup
 
             if (string.IsNullOrEmpty(connectionString) || string.IsNullOrEmpty(queueName))
             {
-                throw new FunctionException("Function cannot start without valid settings for service bus.");
+                throw new ApplicationException("Function cannot start without valid settings for queue storage.");
             }
 
             options.ConnectionString = connectionString;
