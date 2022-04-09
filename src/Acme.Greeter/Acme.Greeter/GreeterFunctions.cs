@@ -1,8 +1,7 @@
-﻿using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.AspNetCore.Http;
+﻿using System.Net;
+using System.Threading.Tasks;
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 
 namespace Acme.Greeter;
@@ -21,22 +20,24 @@ public class GreeterFunctions
         _logger = logger;
     }
 
-    [FunctionName("http-greeter")]
-    public async Task<IActionResult> Greet(
-        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "Greet/{name?}")] 
-        HttpRequest req, 
+    [Function("http-greeter")]
+    public async Task<HttpResponseData> Greet(
+        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "Greet/{name?}")]
+        HttpRequestData req, 
         string name)
     {
         if (string.IsNullOrEmpty(name))
         {
             _logger.LogError("Path parameter 'name' is missing.");
-            return new BadRequestResult();
+            return req.CreateResponse(HttpStatusCode.BadRequest);
         }
-        
-        return new OkObjectResult(await _greetingService.Greet(name));
+
+        var response = req.CreateResponse(HttpStatusCode.OK);
+        await response.WriteStringAsync(await _greetingService.Greet(name));
+        return response;
     }
     
-    [FunctionName("audit-greeting")]
+    [Function("audit-greeting")]
     public void Audit(
         [QueueTrigger("audit-messages", Connection = "QueueConnectionString")] 
         string message)
