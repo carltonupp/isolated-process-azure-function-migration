@@ -19,8 +19,10 @@ public class GreetingService
             throw new ArgumentException("Argument must have a valid value", nameof(name));
         }
 
-        await _queueService.Send($"Greeting requested for {name}");
-        
-        return $"Hello, {name}";
+        var greeting = $"Hello, {name}";
+
+        await _queueService.Send(name);
+
+        return greeting;
     }
 }

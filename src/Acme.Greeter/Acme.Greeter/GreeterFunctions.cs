@@ -1,9 +1,11 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using Microsoft.WindowsAzure.Storage.Queue.Protocol;
 
 namespace Acme.Greeter;
 
@@ -22,7 +24,7 @@ public class GreeterFunctions
     }
 
     [FunctionName("http-greeter")]
-    public async Task<IActionResult> RunAsync(
+    public async Task<IActionResult> Greet(
         [HttpTrigger(AuthorizationLevel.Function, "get", Route = "Greet/{name?}")] 
         HttpRequest req, 
         string name)
@@ -34,5 +36,13 @@ public class GreeterFunctions
         }
         
         return new OkObjectResult(await _greetingService.Greet(name));
+    }
+    
+    [FunctionName("audit-greeting")]
+    public void Audit(
+        [QueueTrigger("audit-messages", Connection = "QueueConnectionString")] 
+        string message)
+    {
+        _logger.LogTrace($"Greeting detected: {message}");
     }
 }
